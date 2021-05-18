@@ -1,27 +1,125 @@
+var svgWidth = 960;
+var svgHeight = 500;
 
-// 'YYYY-MM-DD' format.
-var dates = ['2021-03-01','2021-04-01']
+var margin = {
+  top: 20,
+  right: 40,
+  bottom: 60,
+  left: 100
+};
 
-var data = []
+var width = svgWidth - margin.left - margin.right;
+var height = svgHeight - margin.top - margin.bottom;
 
-var API_Key = "03ae3b73753445fa992cc8614494aea9"
+// Create an SVG wrapper, append an SVG group that will hold our chart, and shift the latter by left and top margins.
+var svg = d3.select("#scatter")
+  .append("svg")
+  .attr("width", svgWidth)
+  .attr("height", svgHeight);
+
+var chartGroup = svg.append("g")
+  .attr("transform", `translate(${margin.left}, ${margin.top})`);
 
 
-// 40.2204° N, 74.0121° W Asbury Park
-var lat = 40.2204
-var long = -74.0121
-// `https://api.ipgeolocation.io/astronomy?apiKey=${API_Key}&lat=${lat}&long=${long}&date=${date}`
-// var location = "New%20York,%20US"
-// "Asbury%20Park,%20US"
+d3.csv("assets/data/data.csv").then(function (censusData) {
+    
+    // Step 1: Parse Data/Cast as numbers
+    // ==============================
+    censusData.forEach(function (data) {
+        data.healthcare = + data.healthcare
+        data.poverty = + data.poverty
+        //data.state
+        data.age = + data.age
+        data.obesity = + data.obesity
+        data.smokes = +data.smokes
+    });
+    // // Step 2: test with plotly (comment out for SVG)
+    // trace = {
+    //     x: censusData.map(d=>d.age),
+    //     y: censusData.map(d=>d.poverty)
+    // }
 
-dates.forEach(function(date) {d3.json(`https://api.ipgeolocation.io/astronomy?apiKey=${API_Key}&lat=${lat}&long=${long}&date=${date}`).then(function(jdata) {
-    data.push(jdata)
-})
-// Promise Pending
-const dataPromise = d3.json(`https://api.ipgeolocation.io/astronomy?apiKey=${API_Key}&ip=1.1.1.1&date=${date}`);
-console.log("Data Promise: ", dataPromise);
+    // data = [trace]
+    // console.log(trace)
 
-}
-);
+    // Plotly.newPlot("scatter", data)
 
-console.log(data)
+    // Step 2: Create scale functions
+    // ==============================
+    var xLinearScale = d3.scaleLinear()
+      .domain(d3.extent(censusData, d => d.poverty))
+      .range([0, width]);
+
+    var yLinearScale = d3.scaleLinear()
+      .domain(d3.extent(censusData, d => d.smokes))
+      .range([height, 0]);
+    // Step 3: Create axis functions
+    // ==============================
+    var bottomAxis = d3.axisBottom(xLinearScale);
+    var leftAxis = d3.axisLeft(yLinearScale);
+    // Step 4: Append Axes to the chart
+    // ==============================
+    chartGroup.append("g")
+      .attr("transform", `translate(0, ${height})`)
+      .call(bottomAxis);
+
+    chartGroup.append("g")
+      .call(leftAxis);
+
+    // Step 5: Create Circles
+    // ==============================
+    var circlesGroup = chartGroup.selectAll("circle")
+    .data(censusData)
+    .enter()
+    .append("circle")
+    .attr("cx", d => xLinearScale(d.poverty))
+    .attr("cy", d => yLinearScale(d.smokes))
+    .attr("r", "15")
+    .attr("fill", "pink")
+    .attr("opacity", ".5");
+    // Step 6: Initialize tool tip
+    // ==============================
+    var toolTip = d3.tip()
+      .attr("class", "tooltip")
+      .offset([80, -60])
+      .html(function(d) {
+        return (`ID: ${d.id}<br>State: ${d.state}<br>Obesity: ${d.obesity}`);
+      });
+
+    // Step 7: Create tooltip in the chart
+    // ==============================
+    chartGroup.call(toolTip);
+// Step 8: Create event listeners to display and hide the tooltip
+    // ==============================
+    circlesGroup.on("mouseover", function(data) {
+        toolTip.show(data, this);
+      })
+        // onmouseout event
+        .on("mouseout", function(data, index) {
+          toolTip.hide(data);
+        });
+  
+      // Create axes labels
+      chartGroup.append("text")
+        .attr("transform", "rotate(-90)")
+        .attr("y", 0 - margin.left + 40)
+        .attr("x", 0 - (height / 2))
+        .attr("dy", "1em")
+        .attr("class", "axisText")
+        .text("Healthcare");
+  
+      chartGroup.append("text")
+        .attr("transform", `translate(${width / 2}, ${height + margin.top + 30})`)
+        .attr("class", "axisText")
+        .text("Poverty");
+
+
+
+
+
+
+
+
+}).catch(function (error) {
+    console.log(error)
+});
