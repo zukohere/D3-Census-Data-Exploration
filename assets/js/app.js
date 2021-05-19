@@ -20,19 +20,25 @@ var svg = d3.select("#scatter")
 var chartGroup = svg.append("g")
   .attr("transform", `translate(${margin.left}, ${margin.top})`);
 
-
 d3.csv("assets/data/data.csv").then(function (censusData) {
-    
     // Step 1: Parse Data/Cast as numbers
     // ==============================
-    censusData.forEach(function (data) {
-        data.healthcare = + data.healthcare
-        data.poverty = + data.poverty
-        //data.state
-        data.age = + data.age
-        data.obesity = + data.obesity
-        data.smokes = +data.smokes
-    });
+    censusData.forEach(function(data){
+        Object.keys(data).forEach(function (key) {
+        if(Boolean(parseFloat(data[key]))) {
+            data[key] =+ data[key]
+        }
+        else {
+            data[key] = data[key]
+        }
+    })});
+    // console.log(Object.keys(censusData[0]))
+    // >> ["id", "state", "abbr", "poverty", "povertyMoe", "age", 
+    //"ageMoe", "income", "incomeMoe", "healthcare", "healthcareLow", 
+    //"healthcareHigh", "obesity", "obesityLow", "obesityHigh", 
+    //"smokes", "smokesLow", "smokesHigh",
+
+
     // // Step 2: test with plotly (comment out for SVG)
     // trace = {
     //     x: censusData.map(d=>d.age),
@@ -40,7 +46,7 @@ d3.csv("assets/data/data.csv").then(function (censusData) {
     // }
 
     // data = [trace]
-    // console.log(trace)
+   
 
     // Plotly.newPlot("scatter", data)
 
