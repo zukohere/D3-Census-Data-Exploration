@@ -21,6 +21,8 @@
       <div class="col-xs-12  col-md-9" id= "svgCol">
         <div id="scatter">
           <!-- We append our chart here. -->
+          <select id="selParam" onchange="paramChanged(this.value)"></select>
+          <select id="selColor" onchange="colorChanged(this.value)"></select>
         </div>
       </div>
     </div>
@@ -54,6 +56,7 @@
   <script src="https://d3js.org/d3.v5.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/d3-tip/0.9.1/d3-tip.js"></script>
   <script type="text/javascript" src="assets/js/app.js"></script>
+  <script type="text/javascript" src="assets/js/colors.js"></script>
   <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 
 </body>

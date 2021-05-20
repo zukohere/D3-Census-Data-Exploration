@@ -194,7 +194,7 @@ function makeResponsive() {
       .attr("cx", d => xLinearScale(d[chosenXAxis]))
       .attr("cy", d => yLinearScale(d[chosenYAxis]))
       .attr("r", 20)
-      .classed("stateCircle", true)
+      // .classed("stateCircle", true)
 
 
     var circleText = chartGroup.selectAll(null)
@@ -205,7 +205,7 @@ function makeResponsive() {
       .attr("x", d => xLinearScale(d[chosenXAxis]))
       .attr("y", d => yLinearScale(d[chosenYAxis]))
       .classed("stateText", true)
-    console.log(chartGroup.text)
+    
 
     // Create group for three x-axis labels
     var labelsXGroup = chartGroup.append("g")
