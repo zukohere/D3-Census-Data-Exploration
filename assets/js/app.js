@@ -193,7 +193,8 @@ function makeResponsive() {
       .append("circle")
       .attr("cx", d => xLinearScale(d[chosenXAxis]))
       .attr("cy", d => yLinearScale(d[chosenYAxis]))
-      .attr("r", 20)
+      .attr("stroke", "white")
+      // .attr("r", 20)
       // .classed("stateCircle", true)
 
 
@@ -351,7 +352,7 @@ function makeResponsive() {
           circlesGroup = updateToolTip(chosenXAxis, chosenYAxis, circlesGroup);
 
           // changes Y label classes to change bold text
-          if (chosenYAxis === "obsesity") {
+          if (chosenYAxis === "obesity") {
             obeseLabel
               .classed("active", true)
               .classed("inactive", false);
