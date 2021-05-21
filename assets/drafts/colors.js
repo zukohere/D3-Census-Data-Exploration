@@ -74,6 +74,7 @@ function init() {
     }).catch(function (error) {
         console.log(error)
     })
+
 }
 
 init()
@@ -110,6 +111,6 @@ function optionChanged(param) {
     }).catch(function (error) {
         console.log(error)
     })
+    
 }
-//prevent page from refreshing on resize after options chosen.
-d3.select(window).on("resize", optionChanged)
+
