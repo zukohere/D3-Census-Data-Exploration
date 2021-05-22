@@ -1,4 +1,4 @@
-function makeResponsive() {
+function init() {
 
   // if the SVG area isn't empty when the browser loads,
   // remove it and replace it with a resized version of the chart
@@ -9,13 +9,13 @@ function makeResponsive() {
   }
 
   // svg params
-  var col= document.querySelector('#svgCol') // https://stackoverflow.com/questions/38005739/bootstrap-get-width-of-div-column-in-pixels
+  var col = document.querySelector('#svgCol') // https://stackoverflow.com/questions/38005739/bootstrap-get-width-of-div-column-in-pixels
     .getBoundingClientRect()
-     
+
 
   var svgWidth = col.right - col.left;
   var svgHeight = 0.75 * svgWidth;
-  
+
 
   var margin = {
     top: 20,
@@ -33,15 +33,16 @@ function makeResponsive() {
     .select("#scatter")
     .append("svg")
     .attr("width", svgWidth)
-    .attr("height", svgHeight);
+    .attr("height",svgHeight);
 
   // Append an SVG group
   var chartGroup = svg.append("g")
     .attr("transform", `translate(${margin.left}, ${margin.top})`);
 
-  // Initial Params
-  var chosenXAxis = "poverty";
-  var chosenYAxis = "obesity";
+  // // Initial Params
+  chosenXAxis="poverty";
+  chosenYAxis="obesity";
+  
   // function used for updating x-scale var upon click on axis label
   function xScale(censusData, chosenXAxis) {
     // create scales
@@ -194,8 +195,8 @@ function makeResponsive() {
       .attr("cx", d => xLinearScale(d[chosenXAxis]))
       .attr("cy", d => yLinearScale(d[chosenYAxis]))
       .attr("stroke", "white")
-      // .attr("r", 20)
-      // .classed("stateCircle", true)
+    // .attr("r", 20)
+    // .classed("stateCircle", true)
 
 
     var circleText = chartGroup.selectAll(null)
@@ -206,11 +207,12 @@ function makeResponsive() {
       .attr("x", d => xLinearScale(d[chosenXAxis]))
       .attr("y", d => yLinearScale(d[chosenYAxis]))
       .classed("stateText", true)
-    
+
 
     // Create group for three x-axis labels
     var labelsXGroup = chartGroup.append("g")
-      .attr("transform", `translate(${width / 2}, ${height + 20})`);
+      .attr("transform", `translate(${width / 2}, ${height + 20})`)
+      .attr("id", "labelsX");
 
     var povertyLabel = labelsXGroup.append("text")
       .attr("x", 0)
@@ -234,6 +236,7 @@ function makeResponsive() {
 
     // Create group for the three y axis labels
     var labelsYGroup = chartGroup.append("g")
+      .attr("id", "labelsY");
     var obeseLabel = labelsYGroup.append("text")
       .attr("transform", "rotate(-90)")
       .attr("y", 0 - margin.left + 50)
@@ -336,7 +339,7 @@ function makeResponsive() {
           // replaces chosenXAxis with value
           chosenYAxis = value;
 
-          console.log(chosenYAxis)
+          console.log(this)
 
           // functions here found above csv import
           // updates x scale for new data
@@ -389,133 +392,118 @@ function makeResponsive() {
         }
       });
 
+    ////////// Initializes page with (and introduces dropdowns to control) circle 
+    ////////// color by, color scale, and size by
+    // set sizes for circles to vary between
+    var sizeRange = [5, 20]
+    // Grab the parameter drop downs for color scale and size
+    var dropdownMenu = d3.select("#selParam");
+    var sizeMenu = d3.select("#selSize")
+
+
+    //populate the options with only keys that have numerical values
+    Object.keys(censusData[0]).forEach(function (key) {
+      if (Boolean(parseFloat(censusData[0][key]))) {
+        if (key != "id") {
+          // color scale
+          var option = dropdownMenu.append("option");
+          var val = option.append("value");
+          val.text(key);
+          // size scale
+          var option = sizeMenu.append("option");
+          var val = option.append("value");
+          val.text(key);
+        }
+      }
+    });
+    // Grab the color drop down
+    var colorMenu = d3.select("#selColor");
+    // create a list of color options and populate it
+    ["Blue",
+      "Red",
+      "Maroon",
+      "Yellow",
+      "Olive",
+      "Lime",
+      "Green",
+      "Aqua",
+      "Teal",
+      "Navy",
+      "Fuchsia",
+      "Purple",
+      // "lightgray",
+      "Black",
+    ].forEach(d => colorMenu.append("option").append("value").text(d))
+    // select the value from the dropdown, and have it determine the color by default.
+    var UserColor = colorMenu.node().value
+    var UserSel = dropdownMenu.node().value
+    var UserSize = sizeMenu.node().value
+
+    // color scaling https://www.d3-graph-gallery.com/graph/custom_color.html
+    var myColor = d3.scaleLinear()
+      .domain(d3.extent(censusData.map(d => parseFloat(d[UserSel]))))
+      .range(["Gainsboro", UserColor])
+
+    //size scaling
+    var mySize = d3.scaleLinear()
+      .domain(d3.extent(censusData.map(d => parseFloat(d[UserSize]))))
+      .range(sizeRange)
+
+    // color the circle with default dropdown option,
+    // with intensity proportional to data value.
+    d3.select("#scatter").selectAll("circle")
+      .transition()
+      .duration(1000)
+      .attr("fill", d => myColor(parseFloat(d[UserSel])))
+      .attr("r", d => mySize(parseFloat(d[UserSize])))
+
+    d3.selectAll(".stateText")
+      .transition()
+      .duration(1000)
+      .attr("font-size", d => mySize(parseFloat(d[UserSize])) * 14 / 20)
+    // removed size from css entry for stateText (14) and original size
+    // of circles was 20. Preserving ratio.
+
+    // Event listener for window resize.
   }).catch(function (error) {
     console.log(error);
   });
-  optionChanged() //defined below
-}
-
-makeResponsive();
-
-// Event listener for window resize.
-// When the browser window is resized, makeResponsive() is called.
-d3.select(window).on("resize", makeResponsive);
-
-
-//////////// Initializes page with (and introduces dropdowns to control) circle 
-//////////// color by, color scale, and size by
-// set sizes for circles to vary between
-var sizeRange = [5, 20]
-
-function init() {
-    d3.csv("assets/data/data.csv").then(function (censusData, err) {
-        // Grab the parameter drop downs for color scale and size
-        var dropdownMenu = d3.select("#selParam");
-        var sizeMenu = d3.select("#selSize")
-
-
-        //populate the options with only keys that have numerical values
-        Object.keys(censusData[0]).forEach(function (key) {
-            if (Boolean(parseFloat(censusData[0][key]))) {
-                if (key != "id") {
-                    // color scale
-                    var option = dropdownMenu.append("option");
-                    var val = option.append("value");
-                    val.text(key);
-                    // size scale
-                    var option = sizeMenu.append("option");
-                    var val = option.append("value");
-                    val.text(key);
-                }
-            }
-        });
-        // Grab the color drop down
-        var colorMenu = d3.select("#selColor");
-        // create a list of color options and populate it
-        ["Blue",
-            "Red",
-            "Maroon",
-            "Yellow",
-            "Olive",
-            "Lime",
-            "Green",
-            "Aqua",
-            "Teal",
-            "Navy",
-            "Fuchsia",
-            "Purple",
-            // "lightgray",
-            "Black",
-        ].forEach(d => colorMenu.append("option").append("value").text(d))
-        // select the value from the dropdown, and have it determine the color by default.
-        var UserColor = colorMenu.node().value
-        var UserSel = dropdownMenu.node().value
-        var UserSize = sizeMenu.node().value
-
-        // color scaling https://www.d3-graph-gallery.com/graph/custom_color.html
-        var myColor = d3.scaleLinear()
-            .domain(d3.extent(censusData.map(d => parseFloat(d[UserSel]))))
-            .range(["Gainsboro", UserColor])
-
-        //size scaling
-        var mySize = d3.scaleLinear()
-            .domain(d3.extent(censusData.map(d => parseFloat(d[UserSize]))))
-            .range(sizeRange)
-
-        // color the circle with default dropdown option,
-        // with intensity proportional to data value.
-        d3.select("#scatter").selectAll("circle")
-        .transition()
-      .duration(1000)
-            .attr("fill", d => myColor(parseFloat(d[UserSel])))
-            .attr("r", d => mySize(parseFloat(d[UserSize])))
-
-        d3.selectAll(".stateText")
-        .transition()
-      .duration(1000)
-            .attr("font-size", d => mySize(parseFloat(d[UserSize])) * 14 / 20)
-        // removed size from css entry for stateText (14) and original size
-        // of circles was 20. Preserving ratio.
-
-    }).catch(function (error) {
-        console.log(error)
-    })
-
 }
 
 init()
 
-
 // create the change event
 function optionChanged(param) {
-    // get value from both dropdowns
-    UserSel = d3.select("#selParam").node().value
-    UserColor = d3.select("#selColor").node().value
-    UserSize = d3.select("#selSize").node().value
-    //get data for the param for the scale, and the apply the color
-    d3.csv("assets/data/data.csv").then(function (censusData, err) {
+  // get value from both dropdowns
+  UserSel = d3.select("#selParam").node().value
+  UserColor = d3.select("#selColor").node().value
+  UserSize = d3.select("#selSize").node().value
+  var sizeRange = [5, 20]
+  //get data for the param for the scale, and the apply the color
+  d3.csv("assets/data/data.csv").then(function (censusData, err) {
 
-        var myColor = d3.scaleLinear()
-            .domain(d3.extent(censusData.map(d => parseFloat(d[UserSel]))))
-            .range(["Gainsboro", UserColor])
+    var myColor = d3.scaleLinear()
+      .domain(d3.extent(censusData.map(d => parseFloat(d[UserSel]))))
+      .range(["Gainsboro", UserColor])
 
-        var mySize = d3.scaleLinear()
-            .domain(d3.extent(censusData.map(d => parseFloat(d[UserSize]))))
-            .range(sizeRange)
+    var mySize = d3.scaleLinear()
+      .domain(d3.extent(censusData.map(d => parseFloat(d[UserSize]))))
+      .range(sizeRange)
 
-        // color the circle with default dropdown option,
-        // with intensity proportional to data value.
-        d3.select("#scatter").selectAll("circle")
-        .transition()
+    // color the circle with default dropdown option,
+    // with intensity proportional to data value.
+    d3.select("#scatter").selectAll("circle")
+      .transition()
       .duration(1000)
-            .attr("fill", d => myColor(parseFloat(d[UserSel])))
-            .attr("r", d => mySize(parseFloat(d[UserSize])))
+      .attr("fill", d => myColor(parseFloat(d[UserSel])))
+      .attr("r", d => mySize(parseFloat(d[UserSize])))
 
-        d3.selectAll(".stateText")
-        .transition()
+    d3.selectAll(".stateText")
+      .transition()
       .duration(1000)
-            .attr("font-size", d => mySize(parseFloat(d[UserSize])) * 14 / 20)
+      .attr("font-size", d => mySize(parseFloat(d[UserSize])) * 14 / 20)
 
-    }).catch(function (error) {
-        console.log(error)
-    })}
+  }).catch(function (error) {
+    console.log(error)
+  })
+}
