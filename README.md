@@ -1,4 +1,4 @@
-# D3-Challenge
+# D3 Census Data Exploration
 Repo for HW 16
 https://zukohere.github.io/D3-Census-Data-Exploration/
 
